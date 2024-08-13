@@ -1,0 +1,17 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "aihonorag"
+main = "src/index.js"
+compatibility_date = "2024-08-06"
+workers_dev = false
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding = "VECTORIZE_INDEX" # available in your Worker on env.VECTORIZE_INDEX
+index_name = "vector-index-lizzierag"
+
+[[d1_databases]]
+binding = "DATABASE" # i.e. available in your Worker on env.DB
+database_name = "lizzieragd1"
+database_id = "cde4b696-5f9d-41a2-a9cb-fa61edbc9f55"
