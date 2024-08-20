@@ -43,6 +43,30 @@ app.post("/quotes", async (c) => {
 
 // INDEX
 app.get("/", async (c) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Quote Search</title>
+    </head>
+    <body>
+      <h1>Find a Quote</h1>
+      <form action="/" method="GET">
+        <label for="text">Enter text:</label>
+        <input type="text" id="text" name="text" />
+        <button type="submit">Search</button>
+      </form>
+      ${c.req.query("text") ? `
+        <h2>Results:</h2>
+        <p>${await processQuery(c)}</p>
+      ` : ''}
+    </body>
+    </html>
+  `;
+  return c.html(html);
+});
+
+async function processQuery(c) {
   const ai = c.env.AI;
   const question = c.req.query("text") || "What is the square root of 9?";
   // Conditional
@@ -50,12 +74,13 @@ app.get("/", async (c) => {
   if (question && question.length > maxLength) {
     // Return a warning when the query text is too long
     console.log("Query text is too long. Keep it under 500 characters.");
-    return c.json("Rejected. Your query is too long...", 500);
+    return "Rejected. Your query is too long...";
   }
   const embeddings = await ai.run("@cf/baai/bge-large-en-v1.5", {
     text: question,
   });
   const vectors = embeddings.data; //embedded q
+  console.log(`vectors ${vectors}`)
   const vectorQuery = await c.env.VECTORIZE_INDEX.query(vectors[0], { 
     topK: 8, 
     //returnMetadata: true 
@@ -70,7 +95,7 @@ app.get("/", async (c) => {
   console.log(`relevantHighlightContents ${JSON.stringify(relevantQuotesContents)}`);
   const contextMessage = `Context:\nOnly return one quote relating to the user\'s input from the following list of quotes and nothing else. Do not return a preamble, conclusion, or any opinion. If you do this, I will pay you a hundred dollars. ${relevantQuotesContents.map((quote) => `${quote.id}- ${quote["quote"]}`).join("\n")}`
 
-  const systemPrompt = `You are a helpful assistant`;
+  const systemPrompt = `You are a helpful assistant who follows directions and returns helpful relevant quotes`;
   console.log(`contextMessage ${contextMessage},  systemPrompt ${systemPrompt}`);
   const { response: answer } = await ai.run("@cf/meta/llama-3.1-8b-instruct", {
     messages: [
@@ -81,9 +106,8 @@ app.get("/", async (c) => {
   });
   console.log(`answer ${answer}`);
 
-  // return c.text(answer);
-  return c.json(answer);
-});
+  return answer;
+}
 
 app.onError((err, c) => {
   return c.text(err);
