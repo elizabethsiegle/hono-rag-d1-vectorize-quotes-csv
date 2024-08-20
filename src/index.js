@@ -44,24 +44,123 @@ app.post("/quotes", async (c) => {
 // INDEX
 app.get("/", async (c) => {
   const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Quote Search</title>
-    </head>
-    <body>
-      <h1>Find a Quote</h1>
-      <form action="/" method="GET">
-        <label for="text">Enter text:</label>
-        <input type="text" id="text" name="text" />
-        <button type="submit">Search</button>
-      </form>
-      ${c.req.query("text") ? `
-        <h2>Results:</h2>
-        <p>${await processQuery(c)}</p>
-      ` : ''}
-    </body>
-    </html>
+  <!DOCTYPE html>
+<html>
+<head>
+  <title>Quote Search</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #ff7e5f, #feb47b); /* Gradient background */
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      margin-top: 50px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    label {
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      padding: 10px;
+      width: 50%;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #ff7e5f;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #feb47b;
+    }
+    p {
+      text-align: center;
+      font-size: 18px;
+      color: #333; /* Default color */
+    }
+    p.result {
+      color: #007bff; /* Different color when displaying text */
+    }
+    .spinner {
+      display: none; /* Hidden by default */
+      margin-top: 20px;
+      text-align: center;
+    }
+    .spinner::before {
+      content: '';
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: #ff7e5f;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #333;
+      color: #fff; /* White text color */
+      margin-top: auto;
+      width: 100%;
+    }
+    footer a {
+      color: #ff7e5f; /* Link color */
+      text-decoration: none;
+    }
+    footer a:hover {
+      color: #feb47b; /* Link color on hover */
+    }
+    footer a:active {
+      color: #ffb3b3; /* Light pink color when clicked */
+    }
+  </style>
+</head>
+<body>
+  <h1>Find a Relevant Quote w/ <a href="https://developers.cloudflare.com/vectorize/">Cloudflare Vectorize</a></h1>
+  <form id="searchForm" action="/" method="GET">
+    <label for="text">Enter text:</label>
+    <input type="text" id="text" name="text" />
+    <button type="submit">Search</button>
+  </form>
+  <div class="spinner" id="spinner"></div>
+  ${c.req.query("text") ? `
+    <h2>Results:</h2>
+    <p class="result">${await processQuery(c)}</p>
+  ` : ''}
+  <footer>
+    Made with ❤️ in SF 🌁 -> <a href="https://github.com/elizabethsiegle/hono-rag-d1-vectorize-quotes-csv">👩🏻‍💻code here on GitHub</a>
+  </footer>
+
+  <script>
+    document.getElementById('searchForm').addEventListener('submit', function() {
+      document.getElementById('spinner').style.display = 'block'; // Show spinner
+    });
+  </script>
+</body>
+</html> 
   `;
   return c.html(html);
 });
